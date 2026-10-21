@@ -1,0 +1,6 @@
+# Needed only to export the model when the bundled ONNX file is absent.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.6.0+cpu
+torchvision==0.21.0+cpu
+ultralytics==8.4.183
+onnx==1.23.2

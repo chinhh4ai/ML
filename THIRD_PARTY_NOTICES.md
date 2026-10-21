@@ -1,0 +1,9 @@
+# Third-party components
+
+- **YOLO11n-seg / Ultralytics**: pretrained weights from `https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt`, exported locally to ONNX (416px, opset 17). Original SHA256: `55ed65c56c91713d23e8402371c6c49a6fd84f257f7dce452e8d70e41dcbe152`. Ultralytics offers AGPL-3.0 and commercial Enterprise licensing; review the applicable terms before distributing or deploying a proprietary service. Public code/weights do not imply unrestricted proprietary use. https://www.ultralytics.com/license
+- **YOLOX-Nano**: optional detection-only ONNX from Megvii's official YOLOX release `0.1.1rc0`. SHA256: `c789161ed43c8269fcd4e67c67eeeb4e80c622da2eb296a20bc6007bd18a0b7d`. YOLOX repository: Apache-2.0. https://github.com/Megvii-BaseDetection/YOLOX
+- **Segmentation test image**: `tests/assets/segmentation-reference.jpg` is the Ultralytics `bus.jpg` asset obtained from `https://raw.githubusercontent.com/ultralytics/ultralytics/main/ultralytics/assets/bus.jpg`. It is used only to verify segmentation/tracking mechanics. It is a street scene, not a river-debris dataset or accuracy benchmark. Source project license: AGPL-3.0.
+- **ONNX Runtime**: MIT. **React**, **Vite**, **FastAPI**, **Lucide**: see their package licenses. **OpenCV**: Apache-2.0 for current releases. **FFmpeg**: external system executable; its license depends on the build and enabled codecs (the libx264 workflow typically uses a GPL-enabled build).
+- AI API use remains subject to the selected provider's terms, pricing and data retention policies.
+
+Bundled ONNX artifact hashes are recorded in `model-checksums.json`. Source files do not contain API credentials. The project has not yet been assigned a separate proprietary or open-source distribution policy; do not assume all third-party components can be relicensed.
