@@ -19,7 +19,7 @@ def session():
         if _session is None:
             path = DATA / 'models/yolox_nano.onnx'
             if not path.exists():
-                raise RuntimeError('Thiếu YOLOX-Nano. Dùng model đi kèm ZIP hoặc tải từ release YOLOX chính thức; xem THIRD_PARTY_NOTICES.md.')
+                raise RuntimeError('Missing YOLOX-Nano model. Use bundled model or download official release; see THIRD_PARTY_NOTICES.md.')
             options = ort.SessionOptions()
             options.intra_op_num_threads = int(number('CPU_THREADS', 2, 1, 16))
             _session = ort.InferenceSession(str(path), sess_options=options, providers=['CPUExecutionProvider'])
