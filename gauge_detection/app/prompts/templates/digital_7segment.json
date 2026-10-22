@@ -1,0 +1,11 @@
+{
+  "id": "digital_7segment",
+  "name": "7-Segment LED Display Panel",
+  "category": "7-Segment Displays",
+  "description": "Digital electronic indicator panel with illuminated red, green, or amber 7-segment LED digits on DC Power Supply Units or Minigra process panels. Displays voltage (V), current (A), or temperature.",
+  "sample_reference": "2_7-Segment Displays/1_Minigra Panel & 2_DC Power Supply Unit",
+  "shape": "Rectangular dark panel face with bright LED digit segments",
+  "scale_info": "Digital numeric readout with active decimal points (e.g. 56.0 V, 12.50 A, 220.4 V)",
+  "indicator_type": "7-segment illuminated LED bar digits and decimal dots",
+  "prompt": "You are inspecting a 7-SEGMENT LED DIGITAL DISPLAY PANEL.\nDIGIT SEGMENT RECOGNITION RULES:\n1. IDENTIFY ILLUMINATED SEGMENTS:\n   - Inspect the on/off state of standard 7 segments (a-g) to recognize digits 0 through 9.\n   - CRITICAL: Locate illuminated DECIMAL POINT (DP) dots to correctly format decimal fractions.\n2. CHANNEL & UNIT IDENTIFICATION:\n   - If multiple rows/channels are present:\n     * Row with 'V' indicates Voltage (e.g. 56.0 V).\n     * Row with 'A' indicates Current (e.g. 0.00 A).\n   - Extract exact numerical reading for each channel.\n3. OUTPUT FORMAT (RAW JSON ONLY):\n{\n  \"gauges\": [{\n    \"gauge_index\": 1,\n    \"gauge_type\": \"seven_segment_display\",\n    \"bbox\": [ymin, xmin, ymax, xmax],\n    \"reading\": {\"value\": <float e.g. 56.0>, \"unit\": \"<V|A|°C>\", \"confidence\": 0.98},\n    \"display_text\": \"<string e.g. 56.0>\"\n  }]\n}"
+}

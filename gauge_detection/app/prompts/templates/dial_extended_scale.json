@@ -1,0 +1,11 @@
+{
+  "id": "dial_extended_scale",
+  "name": "Extended Overload Scale Ammeter",
+  "category": "Dial Gauges",
+  "description": "AC Ammeter designed for motor starting inrush currents (Cooling Water Pump Panel, Generator). Features non-linear scale divisions: linear low-end for normal operating current and compressed high-end (2x-5x) for overload.",
+  "sample_reference": "1_Dial Gauges/4_Extended Scale and Others/Cooling Water Pump Panel",
+  "shape": "Square switchgear bezel 96x96mm",
+  "scale_info": "Example: 0 to 50A expanded linear scale, 50 to 250A compressed overload scale",
+  "indicator_type": "Fine pointer needle with non-uniform scale graduations",
+  "prompt": "You are inspecting an EXTENDED / EXPANDED NON-LINEAR SCALE AMMETER.\nNON-UNIFORM SCALE CALCULATION RULES:\n1. SCALE COMPRESSION IDENTIFICATION:\n   - Tick spacing is NOT uniform across the dial arc!\n   - Operating Zone (left half): Ticks are widely spaced with fine subdivisions.\n   - Overload Inrush Zone (right half): Ticks are heavily compressed to absorb motor startup surge.\n2. LOCAL INTERPOLATION (CRITICAL):\n   - Identify the TWO nearest printed numbers flanking the needle tip.\n   - Count the subdivision ticks between those two numbers to determine local tick value.\n   - DO NOT use linear interpolation across the whole dial; interpolate strictly within the local sector.\n3. OUTPUT FORMAT (RAW JSON ONLY):\n{\n  \"gauges\": [{\n    \"gauge_index\": 1,\n    \"gauge_type\": \"ammeter_extended_scale\",\n    \"bbox\": [ymin, xmin, ymax, xmax],\n    \"reading\": {\"value\": <float>, \"unit\": \"A\", \"confidence\": 0.95},\n    \"scale\": {\"min_val\": <float>, \"rated_val\": <float>, \"max_val\": <float>, \"unit\": \"A\"},\n    \"needle\": {\"angle_deg\": <float>, \"tip\": [y, x], \"center\": [y, x]}\n  }]\n}"
+}

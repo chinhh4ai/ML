@@ -1,0 +1,11 @@
+{
+  "id": "stem_thermometer",
+  "name": "Industrial Stem Bimetal Thermometer",
+  "category": "Stem Thermometers",
+  "description": "Industrial bimetallic stem dial thermometer mounted on engine cooling water pipes, lube oil lines, or generator bearing wells. Temperature scale in °C (0-100°C, 0-120°C, or 0-150°C).",
+  "sample_reference": "4_Stem Thermometers/1_Pump Engine, 2_Generator & 3_Room Thermometer",
+  "shape": "Circular dial head atop stainless steel stem probe and hex mounting fitting",
+  "scale_info": "0 to 100 °C, 0 to 120 °C, or 0 to 150 °C (sometimes dual °C / °F)",
+  "indicator_type": "Center-pivot mechanical pointer with teardrop tail",
+  "prompt": "You are inspecting an INDUSTRIAL STEM BIMETAL THERMOMETER.\nLOCALIZATION & TEMPERATURE READING RULES:\n1. DIAL FACE LOCALIZATION ON PIPING:\n   - Locate the circular dial head mounted on machinery piping or engine casing.\n   - Ignore the background pipe, flange bolts, and mounting hex fitting.\n2. TEMPERATURE SCALE & UNIT:\n   - Physical unit is Celsius degrees ('°C' or 'deg C'). Outer secondary scale may be '°F'.\n   - min_range: typically 0°C (or -20°C).\n   - max_range: typically 100°C, 120°C, or 150°C.\n3. NEEDLE POINTER DEFLECTION:\n   - Follow the pointer from center pivot to perimeter scale tip.\n   - Read indicated temperature (e.g. 45°C, 62°C, 78°C).\n4. OUTPUT FORMAT (RAW JSON ONLY):\n{\n  \"gauges\": [{\n    \"gauge_index\": 1,\n    \"gauge_type\": \"stem_thermometer\",\n    \"bbox\": [ymin, xmin, ymax, xmax],\n    \"reading\": {\"value\": <float>, \"unit\": \"°C\", \"confidence\": 0.95},\n    \"scale\": {\"min_val\": <float>, \"max_val\": <float>, \"unit\": \"°C\"},\n    \"needle\": {\"angle_deg\": <float>, \"tip\": [y, x], \"center\": [y, x]}\n  }]\n}"
+}

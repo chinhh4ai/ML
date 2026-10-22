@@ -1,0 +1,11 @@
+{
+  "id": "digital_energy_hour",
+  "name": "Kilowatt-Hour & Operating Hour Meter",
+  "category": "Digital Meters",
+  "description": "Electromechanical or digital active energy meter (kWh) and cumulative runtime hour meter (h) on industrial Service Entrance Panels.",
+  "sample_reference": "3_Digital Meters/2_Energy Meter_Operating Hour Meter & 1_Service Entrance Panel",
+  "shape": "DIN-rail or panel-mount modular enclosure",
+  "scale_info": "5 to 7 digits (e.g. 00022.1 kWh or 01450.8 h)",
+  "indicator_type": "Mechanical roller drums or segmented LCD display",
+  "prompt": "You are inspecting an ENERGY (kWh) OR OPERATING RUNTIME (Hour) METER.\nDIGIT READOUT PROTOCOL:\n1. METER TYPE DISCRIMINATION:\n   - Energy Meter: Unit is 'kWh' or 'MWh'.\n   - Operating Hour Meter: Unit is 'h' (hours) or 'hrs'.\n2. READ SEQUENTIAL DIGITS:\n   - Read digits from left to right.\n   - Rightmost digit (often red-bordered or after a decimal comma) represents 1/10th (0.1 kWh or 0.1 h).\n3. OUTPUT FORMAT (RAW JSON ONLY):\n{\n  \"gauges\": [{\n    \"gauge_index\": 1,\n    \"gauge_type\": \"<energy_meter|hour_meter>\",\n    \"bbox\": [ymin, xmin, ymax, xmax],\n    \"reading\": {\"value\": <float>, \"unit\": \"<kWh|h>\", \"confidence\": 0.95},\n    \"display_text\": \"<digit string>\"\n  }]\n}"
+}

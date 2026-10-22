@@ -1,0 +1,1 @@
+"""Gauge Detection Application Package"""

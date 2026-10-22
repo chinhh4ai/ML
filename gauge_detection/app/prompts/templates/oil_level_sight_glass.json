@@ -1,0 +1,11 @@
+{
+  "id": "oil_level_sight_glass",
+  "name": "Gearbox Oil Level Sight Glass",
+  "category": "Level Gauges",
+  "description": "Lubricating oil level sight glass (bullseye circular window or tubular glass column) on heavy industrial gear reducers. Evaluates liquid meniscus level against MIN/MAX reference marks or red center bullseye.",
+  "sample_reference": "5_Oil Level Gauges/Gear Reducer No.1, No.2, No.3",
+  "shape": "Threaded brass/steel circular bullseye window or vertical sight tube",
+  "scale_info": "MIN line, MAX line, or red center bullseye circle",
+  "indicator_type": "Horizontal oil meniscus liquid boundary line (amber/gold liquid)",
+  "prompt": "You are inspecting a GEARBOX OIL LEVEL SIGHT GLASS.\nMENISCUS EVALUATION PROTOCOL:\n1. LOCATE SIGHT GLASS ON CASING:\n   - Locate the circular sight glass window or tubular glass column threaded into the gearbox housing.\n2. OIL-AIR MENISCUS LINE:\n   - Lower portion contains dark amber/yellow lubricating oil.\n   - Upper portion contains air.\n   - The horizontal boundary line between liquid and air is the oil level.\n3. STATUS ASSESSMENT:\n   - Reference against etched MIN/MAX lines or center red target circle.\n   - Target normal level is centered (40% to 60%).\n   - Determine status: 'NORMAL' (within bounds), 'LOW' (below MIN), or 'HIGH' (overfill).\n4. OUTPUT FORMAT (RAW JSON ONLY):\n{\n  \"gauges\": [{\n    \"gauge_index\": 1,\n    \"gauge_type\": \"oil_level_sight_glass\",\n    \"bbox\": [ymin, xmin, ymax, xmax],\n    \"reading\": {\"value\": <float percent e.g. 50.0>, \"unit\": \"%\", \"status\": \"<NORMAL|LOW|HIGH>\", \"confidence\": 0.95},\n    \"scale\": {\"min_val\": 0, \"max_val\": 100, \"unit\": \"%\"}\n  }]\n}"
+}

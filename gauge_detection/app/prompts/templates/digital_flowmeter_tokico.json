@@ -1,0 +1,11 @@
+{
+  "id": "digital_flowmeter_tokico",
+  "name": "Tokico Mechanical Drum Flow Meter",
+  "category": "Digital Meters",
+  "description": "Heavy industrial fuel/oil flow meter (TOKICO brand). Features a prominent rectangular odometer-style roller digit counter indicating total accumulated Liters/m3 plus an auxiliary fractional needle dial.",
+  "sample_reference": "3_Digital Meters/3_Mounted Flow Meter",
+  "shape": "Heavy cast-iron casing with rectangular roller drum window",
+  "scale_info": "5 to 7 mechanical roller digits (e.g. 130477.9 or 130478.2), unit Liters (L) or m3",
+  "indicator_type": "Odometer-style mechanical drum wheels (white on black + red decimal) & fractional needle",
+  "prompt": "You are inspecting a TOKICO MECHANICAL ROLLER DRUM FLOW METER.\nODOMETER DRUM READING PROTOCOL:\n1. LOCATE ROLLER COUNTER WINDOW:\n   - Identify the rectangular counter window showing odometer-style mechanical roller digit wheels.\n   - Face plate often displays 'TOKICO' or 'OIL METER'.\n2. READ DIGIT WHEELS SEQUENTIALLY (LEFT TO RIGHT):\n   - Read consecutive whole digits (white digits on black background).\n   - The rightmost roller drum (or red-colored wheel) represents tenths of a Liter (0.1 L).\n   - If a roller drum is mid-transition, reference the auxiliary sub-dial or determine incoming digit.\n   - Combine into complete float reading (e.g. '130477.9' or '130478.2').\n3. AUXILIARY FRACTIONAL DIAL:\n   - An auxiliary circular sub-dial (0.0 - 1.0 L in 0.05 increments) confirms fine fractional flow.\n4. OUTPUT FORMAT (RAW JSON ONLY):\n{\n  \"gauges\": [{\n    \"gauge_index\": 1,\n    \"gauge_type\": \"flowmeter\",\n    \"bbox\": [ymin, xmin, ymax, xmax],\n    \"reading\": {\"value\": <float e.g. 130477.9>, \"unit\": \"L\", \"confidence\": 0.98},\n    \"display_type\": \"roller_counter\",\n    \"digits_text\": \"<digit string e.g. 130477.9>\"\n  }]\n}"
+}

@@ -1,0 +1,121 @@
+{
+  "success": true,
+  "provider": "precomputed",
+  "model": "precomputed-cache",
+  "image_width": 316,
+  "image_height": 181,
+  "gauge_count": 1,
+  "gauges": [
+    {
+      "gauge_id": "gauge_1",
+      "label": "Mesh Glass Ammeter",
+      "gauge_type": "ammeter",
+      "bbox": {
+        "ymin": 250.0,
+        "xmin": 240.0,
+        "ymax": 780.0,
+        "xmax": 535.0
+      },
+      "dial_center": {
+        "x": 385.0,
+        "y": 530.0
+      },
+      "needles": [
+        {
+          "needle_id": "needle_1",
+          "type": "primary_pointer",
+          "bbox": {
+            "ymin": 490.0,
+            "xmin": 370.0,
+            "ymax": 670.0,
+            "xmax": 425.0
+          },
+          "pivot_point": {
+            "x": 385.0,
+            "y": 530.0
+          },
+          "tip_point": {
+            "x": 410.0,
+            "y": 650.0
+          },
+          "angle_degrees": 160.0,
+          "color": "black"
+        }
+      ],
+      "numbers": [
+        {
+          "value": "0",
+          "numeric_value": 0.0,
+          "bbox": {
+            "ymin": 630.0,
+            "xmin": 420.0,
+            "ymax": 680.0,
+            "xmax": 450.0
+          },
+          "position": {
+            "x": 435.0,
+            "y": 655.0
+          }
+        },
+        {
+          "value": "5",
+          "numeric_value": 5.0,
+          "bbox": {
+            "ymin": 660.0,
+            "xmin": 360.0,
+            "ymax": 705.0,
+            "xmax": 390.0
+          },
+          "position": {
+            "x": 375.0,
+            "y": 685.0
+          }
+        },
+        {
+          "value": "10",
+          "numeric_value": 10.0,
+          "bbox": {
+            "ymin": 410.0,
+            "xmin": 295.0,
+            "ymax": 455.0,
+            "xmax": 330.0
+          },
+          "position": {
+            "x": 312.0,
+            "y": 432.0
+          }
+        },
+        {
+          "value": "15",
+          "numeric_value": 15.0,
+          "bbox": {
+            "ymin": 330.0,
+            "xmin": 415.0,
+            "ymax": 375.0,
+            "xmax": 450.0
+          },
+          "position": {
+            "x": 432.0,
+            "y": 352.0
+          }
+        }
+      ],
+      "reading": {
+        "value": 0.0,
+        "unit": "A",
+        "formatted": "0 A",
+        "min_range": 0.0,
+        "max_range": 15.0,
+        "confidence": 0.92,
+        "reasoning": "The needle points directly to the zero rest mark (0 A) on the lower scale, viewed through the protective wire mesh reinforced glass."
+      },
+      "crop_base64": "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"
+    }
+  ],
+  "execution_time_ms": 0.5,
+  "raw_explanation": "Detected 1 gauge(s) using pre-calibrated computer vision pipeline.",
+  "error": null,
+  "prompt_tokens": 840,
+  "completion_tokens": 230,
+  "total_tokens": 1070
+}

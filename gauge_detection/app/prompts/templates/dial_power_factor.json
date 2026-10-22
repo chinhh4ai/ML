@@ -1,0 +1,11 @@
+{
+  "id": "dial_power_factor",
+  "name": "Power Factor Meter (cos φ)",
+  "category": "Dial Gauges",
+  "description": "Switchboard cosine phi power factor meter. Features a symmetric bidirectional arc centered at 1.0 (Unity), with capacitive LEAD zone on one side and inductive LAG zone on the other side.",
+  "sample_reference": "1_Dial Gauges/1_Standard Cases/1-3_Power Factor Meter (Service Entrance & Generator Panel)",
+  "shape": "Square switchboard bezel 96x96mm or 110x110mm",
+  "scale_info": "Center is 1.0 (Unity). LEAD zone: 0.5 - 0.7 - 0.9 - 1.0. LAG zone: 1.0 - 0.9 - 0.7 - 0.5",
+  "indicator_type": "Center-pivot black mechanical needle with bidirectional arc",
+  "prompt": "You are inspecting a POWER FACTOR METER (cos phi meter).\nTECHNICAL SPECIFICATION & READING RULES:\n1. BIDIRECTIONAL SYMMETRIC SCALE:\n   - The center of the scale arc corresponds to 1.0 (Unity power factor).\n   - 'LEAD' zone (Capacitive, C): ranges between 0.5 and 1.0.\n   - 'LAG' zone (Inductive, L): ranges between 1.0 and 0.5.\n   - The physical unit is dimensionless 'cos_phi' between 0.50 and 1.00.\n2. NEEDLE OBSERVATION:\n   - Determine whether needle tip points into the LEAD side or LAG side.\n   - Read the exact numerical cos phi value (e.g. 0.88, 0.94, 0.98, 1.00).\n   - Filter out glass reflections from ambient fluorescent room lighting.\n3. OUTPUT FORMAT (RAW JSON ONLY):\n{\n  \"gauges\": [{\n    \"gauge_index\": 1,\n    \"gauge_type\": \"power_factor_meter\",\n    \"bbox\": [ymin, xmin, ymax, xmax],\n    \"reading\": {\"value\": <float 0.5-1.0>, \"unit\": \"cos_phi\", \"mode\": \"<LEAD|LAG|UNITY>\", \"confidence\": 0.95},\n    \"scale\": {\"min_val\": 0.5, \"center_val\": 1.0, \"max_val\": 0.5, \"unit\": \"cos_phi\"},\n    \"needle\": {\"angle_deg\": <float>, \"tip\": [y, x], \"center\": [y, x]}\n  }]\n}"
+}
