@@ -1,11 +1,32 @@
+# Virtual environments
 .venv/
-.data/
+**/.venv/
+.model-venv/
+**/.model-venv/
+
+# Environment secrets
 .env
+**/.env
+
+# Large model data & weights (>100MB exceeds GitHub limit)
+.data/
+**/.data/
+weights/
+**/weights/
+*.pt
+*.pth
+
+# Python Caches
 __pycache__/
+**/__pycache__/
 .pytest_cache/
-frontend/node_modules/
-frontend/dist/
+**/.pytest_cache/
 *.pyc
 *.log
-.model-venv/
+
+# Frontend build artifacts
+node_modules/
+**/node_modules/
+dist/
+**/dist/
 *.tsbuildinfo
