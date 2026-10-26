@@ -40,3 +40,10 @@ def update(vid, **changes):
         with connect() as conn:
             conn.execute('INSERT OR REPLACE INTO videos VALUES (?,?)', (vid, json.dumps(payload, ensure_ascii=False)))
     return payload
+
+
+def delete(vid):
+    with LOCK:
+        with connect() as conn:
+            conn.execute('DELETE FROM videos WHERE id=?', (vid,))
+

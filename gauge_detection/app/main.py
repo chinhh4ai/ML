@@ -94,6 +94,18 @@ SAMPLE_REGISTRY = [
 ]
 
 
+
+
+class Base64DetectRequest(BaseModel):
+    image_base64: Optional[str] = None
+    sample_id: Optional[str] = None
+    filename: Optional[str] = None
+    provider: Optional[str] = None
+    force_live: Optional[bool] = False
+    custom_prompt: Optional[str] = None
+    gauge_type: Optional[str] = None
+
+
 def load_precomputed_data(sample_id: str) -> Optional[DetectionResult]:
     """Load pre-cached detection result from disk for instant demonstration"""
     cache_file = PRECOMPUTED_DIR / f"{sample_id}.json"
@@ -105,16 +117,6 @@ def load_precomputed_data(sample_id: str) -> Optional[DetectionResult]:
         except Exception as e:
             print(f"Warning: Failed to load precomputed cache for {sample_id}: {e}")
     return None
-
-
-class Base64DetectRequest(BaseModel):
-    image_base64: Optional[str] = None
-    sample_id: Optional[str] = None
-    filename: Optional[str] = None
-    provider: Optional[str] = None
-    force_live: Optional[bool] = False
-    custom_prompt: Optional[str] = None
-    gauge_type: Optional[str] = None
 
 
 @app.get("/api/prompts/templates", response_model=List[GaugeTemplate])
@@ -153,12 +155,21 @@ async def get_sample_image(filename: str):
 
 
 @app.get("/api/samples/{sample_id}/detection", response_model=DetectionResult)
-async def get_sample_precomputed_detection(sample_id: str):
-    """Retrieve instant precomputed detection for a sample"""
+async def get_sample_detection(sample_id: str):
+    """Retrieve instant precomputed detection for a sample, or fallback to live AI"""
     cached = load_precomputed_data(sample_id)
     if cached:
         return cached
-    raise HTTPException(status_code=404, detail=f"Precomputed detection for '{sample_id}' not found")
+    matched = next((s for s in SAMPLE_REGISTRY if s.id == sample_id or s.filename == sample_id), None)
+    if not matched:
+        raise HTTPException(status_code=404, detail=f"Sample '{sample_id}' not found")
+    target = SAMPLES_DIR / matched.filename
+    if not target.exists():
+        raise HTTPException(status_code=404, detail=f"Sample image for '{sample_id}' not found")
+    with open(target, "rb") as f:
+        image_bytes = f.read()
+    detector = get_detector()
+    return await detector.detect(image_bytes=image_bytes, filename=matched.filename)
 
 
 @app.get("/api/config")
@@ -344,11 +355,8 @@ async def detect_gauge(
     Detect gauges, pointers, dial numbers, and predict readings from uploaded image or sample.
     Instantly returns precomputed cache for demo samples if no provider override, force_live, or custom prompt is requested.
     """
-    if custom_prompt or (gauge_type and gauge_type.strip().lower() != "default"):
-        force_live = True
-
-    # 1. Fast Path: If it is a known sample and cache is allowed
-    if sample_id and not force_live and not provider_override:
+    # 1. Fast Path for demo samples
+    if sample_id and not force_live and not provider_override and not custom_prompt and (not gauge_type or gauge_type.strip().lower() == "default"):
         cached = load_precomputed_data(sample_id)
         if cached:
             return cached
@@ -399,12 +407,8 @@ async def detect_gauge_json(payload: Base64DetectRequest):
     """Detect gauges using JSON payload (base64 image or sample_id)"""
     import base64
 
-    force_live = payload.force_live
-    if payload.custom_prompt or (payload.gauge_type and payload.gauge_type.strip().lower() != "default"):
-        force_live = True
-
-    # 1. Fast Path for samples
-    if payload.sample_id and not force_live and not payload.provider:
+    # Fast path for demo samples
+    if payload.sample_id and not payload.force_live and not payload.provider and not payload.custom_prompt and (not payload.gauge_type or payload.gauge_type.strip().lower() == "default"):
         cached = load_precomputed_data(payload.sample_id)
         if cached:
             return cached
@@ -477,9 +481,8 @@ async def detect_annotated_image(
     if not image_bytes:
         raise HTTPException(status_code=400, detail="No image provided")
 
-    # Fast path: use cached result if available
     result = None
-    if sample_id and (not provider_override or provider_override in ("mock", "precomputed")):
+    if sample_id and (not provider_override or provider_override in ("precomputed", "mock")):
         result = load_precomputed_data(sample_id)
 
     if not result:

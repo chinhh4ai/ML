@@ -12,7 +12,6 @@ from google import genai
 from google.genai import types
 
 from app.providers.base import BaseGaugeDetector
-from app.providers.mock_provider import MockGaugeDetector
 from app.schemas import (
     DetectionResult,
     GaugeDetection,
@@ -25,7 +24,7 @@ from app.schemas import (
 
 
 from app.prompts import GeminiGaugePrompt
-from app.providers.utils import extract_and_parse_json
+from app.providers.utils import extract_and_parse_json, build_normalized_gauge_detection
 
 
 class GeminiGaugeDetector(BaseGaugeDetector):
@@ -53,16 +52,10 @@ class GeminiGaugeDetector(BaseGaugeDetector):
         img = Image.open(io.BytesIO(image_bytes))
         width, height = img.size
 
-        # If no client or API key is provided, use mock detector as fallback
         if not self.client or not self.api_key:
-            mock_detector = MockGaugeDetector(model_name="mock-fallback-no-api-key")
-            result = await mock_detector.detect(image_bytes, filename=filename, custom_prompt=custom_prompt, gauge_type=gauge_type)
-            result.provider = "mock (Gemini API key not configured)"
-            result.raw_explanation = (
-                "GEMINI_API_KEY is not configured. The system is operating in mock/pre-calibrated mode. "
-                "Please configure an API key in .env or via the Settings modal to run live Gemini Vision inference."
+            raise RuntimeError(
+                "GEMINI_API_KEY is not configured. Please set GEMINI_API_KEY in .env or via Settings."
             )
-            return result
 
         try:
             # Prepare image content
@@ -71,15 +64,17 @@ class GeminiGaugeDetector(BaseGaugeDetector):
             if mime_type == "image/jpg":
                 mime_type = "image/jpeg"
 
+            system_prompt = self.prompt_builder.build_system_prompt()
             if custom_prompt and custom_prompt.strip():
-                user_prompt = custom_prompt.strip()
-                system_prompt = (
-                    "You are an expert industrial computer vision inspector specializing in industrial meters.\n"
-                    "Carefully follow the user prompt instructions and output strictly valid raw JSON starting with '{' and ending with '}'.\n"
-                    "Do NOT include markdown fences, preambles, or conversational text outside the JSON."
+                user_prompt = (
+                    f"{custom_prompt.strip()}\n\n"
+                    "CRITICAL MANDATORY INSTRUCTIONS:\n"
+                    "1. For dial/needle gauges, detect all needles in `needles` with exact tip_point and pivot_point.\n"
+                    "2. Detect ALL printed scale numbers in `numbers` with exact `bbox` [ymin, xmin, ymax, xmax] in 0-1000 scale and `position`.\n"
+                    "3. Provide `reading.reasoning` explaining needle angle and scale numbers.\n"
+                    "4. Output strictly valid raw JSON matching the required system schema."
                 )
             else:
-                system_prompt = self.prompt_builder.build_system_prompt()
                 user_prompt = self.prompt_builder.build_user_prompt(filename=filename)
 
             response = await asyncio.to_thread(
@@ -99,78 +94,11 @@ class GeminiGaugeDetector(BaseGaugeDetector):
             raw_text = response.text or "{}"
             parsed_data = extract_and_parse_json(raw_text)
 
-            # Robust conversion helpers for both list and dict formats
-            def safe_bbox(data, default_ymin=0, default_xmin=0, default_ymax=1000, default_xmax=1000) -> BoundingBox:
-                if isinstance(data, (list, tuple)) and len(data) >= 4:
-                    return BoundingBox(ymin=float(data[0]), xmin=float(data[1]), ymax=float(data[2]), xmax=float(data[3]))
-                elif isinstance(data, dict):
-                    return BoundingBox(
-                        ymin=float(data.get("ymin", default_ymin)),
-                        xmin=float(data.get("xmin", default_xmin)),
-                        ymax=float(data.get("ymax", default_ymax)),
-                        xmax=float(data.get("xmax", default_xmax))
-                    )
-                return BoundingBox(ymin=default_ymin, xmin=default_xmin, ymax=default_ymax, xmax=default_xmax)
-
-            def safe_point(data, default_x=500, default_y=500) -> Point2D:
-                if isinstance(data, (list, tuple)) and len(data) >= 2:
-                    return Point2D(x=float(data[0]), y=float(data[1]))
-                elif isinstance(data, dict):
-                    return Point2D(x=float(data.get("x", default_x)), y=float(data.get("y", default_y)))
-                return Point2D(x=default_x, y=default_y)
-
-            # Convert to schema
+            # Convert to schema using normalized builder
             gauges_data = parsed_data.get("gauges", [])
             gauges = []
-            for g in gauges_data:
-                bbox_obj = safe_bbox(g.get("bbox"))
-                center_obj = safe_point(g.get("dial_center"), 500, 500)
-                
-                needles = []
-                for n in g.get("needles", []):
-                    nb_obj = safe_bbox(n.get("bbox")) if n.get("bbox") else None
-                    needles.append(NeedleDetection(
-                        needle_id=n.get("needle_id", "needle_1"),
-                        type=n.get("type", "primary_pointer"),
-                        bbox=nb_obj,
-                        pivot_point=safe_point(n.get("pivot_point"), center_obj.x, center_obj.y),
-                        tip_point=safe_point(n.get("tip_point"), 500, 200),
-                        angle_degrees=n.get("angle_degrees"),
-                        color=n.get("color", "black")
-                    ))
-
-                numbers = []
-                for num in g.get("numbers", []):
-                    n_bbox_obj = safe_bbox(num.get("bbox"), 0, 0, 0, 0)
-                    pos_obj = safe_point(num.get("position"), 0, 0) if num.get("position") else None
-                    numbers.append(ScaleNumberDetection(
-                        value=str(num.get("value", "")),
-                        numeric_value=num.get("numeric_value"),
-                        bbox=n_bbox_obj,
-                        position=pos_obj
-                    ))
-
-                read_data = g.get("reading", {})
-                reading = GaugeReading(
-                    value=float(read_data.get("value", 0.0)),
-                    unit=read_data.get("unit", ""),
-                    formatted=read_data.get("formatted", f"{read_data.get('value', 0.0)} {read_data.get('unit', '')}"),
-                    min_range=read_data.get("min_range"),
-                    max_range=read_data.get("max_range"),
-                    confidence=float(read_data.get("confidence", 0.9)),
-                    reasoning=read_data.get("reasoning", "")
-                )
-
-                gauges.append(GaugeDetection(
-                    gauge_id=g.get("gauge_id", f"gauge_{len(gauges)+1}"),
-                    label=g.get("label", "Analog Gauge"),
-                    gauge_type=g.get("gauge_type", "generic"),
-                    bbox=bbox_obj,
-                    dial_center=center_obj,
-                    needles=needles,
-                    numbers=numbers,
-                    reading=reading
-                ))
+            for idx, g in enumerate(gauges_data, start=1):
+                gauges.append(build_normalized_gauge_detection(g, default_index=idx))
 
             # Token usage extraction
             usage = getattr(response, "usage_metadata", None)
@@ -198,11 +126,5 @@ class GeminiGaugeDetector(BaseGaugeDetector):
             )
 
         except Exception as e:
-            execution_ms = round((time.time() - start_time) * 1000, 1)
-            print(f"Gemini detection error: {e}. Falling back to pre-calibrated mock detector.")
-            # Fallback gracefully so the app stays functional
-            mock_detector = MockGaugeDetector(model_name="mock-fallback-on-error")
-            fallback_res = await mock_detector.detect(image_bytes, filename=filename)
-            fallback_res.provider = f"mock (Gemini Error: {str(e)})"
-            fallback_res.error = str(e)
-            return fallback_res
+            print(f"Gemini detection error: {e}")
+            raise RuntimeError(f"Gemini detection error: {e}")

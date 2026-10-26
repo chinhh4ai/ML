@@ -6,7 +6,7 @@ from app.providers.base import BaseGaugeDetector
 from app.providers.gemini_provider import GeminiGaugeDetector
 from app.providers.openai_provider import OpenAIGaugeDetector
 from app.providers.hybrid_provider import HybridGaugeDetector
-from app.providers.mock_provider import MockGaugeDetector
+from app.providers.litellm_provider import LiteLLMGaugeDetector
 
 
 def get_detector(provider_override: str = None) -> BaseGaugeDetector:
@@ -36,8 +36,6 @@ def get_detector(provider_override: str = None) -> BaseGaugeDetector:
             base_url=settings.LITELLM_BASE_URL,
             model_name=settings.LITELLM_MODEL
         )
-    elif provider in ("mock", "offline", "demo"):
-        return MockGaugeDetector(model_name="mock-precalibrated")
     else:
         # Default fallback to Gemini
         return GeminiGaugeDetector(

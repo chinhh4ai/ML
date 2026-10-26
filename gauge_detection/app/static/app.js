@@ -257,27 +257,30 @@ async function runSampleDetection(sample, cardElement) {
     return;
   }
 
-  // Fallback to fetch if not yet loaded in cache
-  showLoader(`SCANNING SAMPLE: ${sample.title.toUpperCase()}`, 'Loading pre-computed detection data...');
+  const activeProvider = state.config?.provider || 'gemini';
+  showLoader(`ANALYZING SAMPLE: ${sample.title.toUpperCase()}`, `Running live AI inference using model: ${getModelDisplayName(activeProvider)}`);
 
   try {
     // 1. Load image onto canvas
     await loadImageFromUrl(sample.thumbnail_url);
 
-    // 2. Call detection API
+    // 2. Call live detection API
     const formData = new FormData();
     formData.append('sample_id', sample.id);
+    formData.append('provider_override', activeProvider);
+    formData.append('force_live', 'true');
 
     const res = await fetch('/api/detect', {
       method: 'POST',
       body: formData
     });
 
-    if (!res.ok) throw new Error(`Detection failed with HTTP ${res.status}`);
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `Detection failed with HTTP ${res.status}`);
+    }
     const data = await res.json();
-    state.sampleCache[sample.id] = data;
     handleDetectionSuccess(data, false);
-
   } catch (err) {
     showToast(`Detection error: ${err.message}`, 'error');
     console.error(err);
@@ -451,10 +454,10 @@ async function reanalyzeCurrentImage() {
 
 function getModelDisplayName(provider) {
   if (!state.config) return provider.toUpperCase();
-  if (provider === 'gemini') return state.config.gemini?.model || 'gemini-2.5-flash';
+  if (provider === 'gemini') return state.config.gemini?.model || 'gemini-3.5-flash';
   if (provider === 'openai') return state.config.openai?.model || 'gpt-4o-mini';
   if (provider === 'litellm') return state.config.litellm?.model || 'Proxy Model';
-  return 'Mock Demo';
+  return provider.toUpperCase();
 }
 
 function handleDetectionSuccess(result, isInstant = false, preserveZoom = false) {
@@ -720,22 +723,46 @@ function drawNeedle(needle, w, h, isHighlighted) {
 }
 
 function drawScaleNumbers(numbers, w, h, isHighlighted) {
+  if (!numbers || !Array.isArray(numbers)) return;
   ctx.save();
   ctx.font = '600 10px "JetBrains Mono", monospace';
 
   numbers.forEach(num => {
-    const y1 = (num.bbox.ymin / 1000.0) * h;
-    const x1 = (num.bbox.xmin / 1000.0) * w;
-    const y2 = (num.bbox.ymax / 1000.0) * h;
-    const x2 = (num.bbox.xmax / 1000.0) * w;
+    let ymin = num.bbox ? num.bbox.ymin : 0;
+    let xmin = num.bbox ? num.bbox.xmin : 0;
+    let ymax = num.bbox ? num.bbox.ymax : 0;
+    let xmax = num.bbox ? num.bbox.xmax : 0;
+
+    let bw = xmax - xmin;
+    let bh = ymax - ymin;
+
+    // Fallback: If bbox is empty but position is provided
+    if ((bw <= 0 || bh <= 0) && num.position && (num.position.x > 0 || num.position.y > 0)) {
+      ymin = Math.max(0, num.position.y - 25);
+      ymax = Math.min(1000, num.position.y + 25);
+      xmin = Math.max(0, num.position.x - 20);
+      xmax = Math.min(1000, num.position.x + 20);
+      bw = xmax - xmin;
+      bh = ymax - ymin;
+    }
+
+    // Skip invalid / top-left corner dummy bboxes
+    if (bw <= 0 || bh <= 0 || (xmin === 0 && ymin === 0 && xmax === 0 && ymax === 0)) {
+      return;
+    }
+
+    const y1 = (ymin / 1000.0) * h;
+    const x1 = (xmin / 1000.0) * w;
+    const y2 = (ymax / 1000.0) * h;
+    const x2 = (xmax / 1000.0) * w;
 
     // Small boundary box
-    ctx.strokeStyle = 'rgba(140, 183, 132, 0.45)';
+    ctx.strokeStyle = isHighlighted ? 'rgba(163, 230, 53, 0.75)' : 'rgba(140, 183, 132, 0.55)';
     ctx.lineWidth = 1;
     ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
 
     // Number text tag
-    ctx.fillStyle = '#8cb784';
+    ctx.fillStyle = isHighlighted ? '#bef264' : '#8cb784';
     ctx.fillText(num.value, x1, Math.max(y1 - 3, 10));
   });
 
@@ -874,27 +901,31 @@ function updateGaugeDetailsPanel() {
   // Needles List (Vertical stack, clear labels)
   const needlesList = document.getElementById('needlesList');
   needlesList.innerHTML = '';
-  gauge.needles.forEach((n, i) => {
-    const item = document.createElement('div');
-    item.className = 'needle-item';
-    const angleText = n.angle_degrees !== null ? `${n.angle_degrees}°` : 'Interpolated';
-    const typeLabel = n.type ? n.type.replace('_', ' ') : 'pointer';
-    item.innerHTML = `
-      <div class="needle-row">
-        <span class="needle-key">Pointer #${i+1} (${typeLabel}):</span>
-        <span class="needle-val" style="color: ${n.color === 'bronze' ? '#f59e0b' : '#ef4444'}">${n.color.toUpperCase()}</span>
-      </div>
-      <div class="needle-row">
-        <span class="needle-key">Deflection Angle:</span>
-        <span class="needle-val">${angleText}</span>
-      </div>
-      <div class="needle-row">
-        <span class="needle-key">Tip Coordinates:</span>
-        <span class="needle-val">(${Math.round(n.tip_point.x)}, ${Math.round(n.tip_point.y)})</span>
-      </div>
-    `;
-    needlesList.appendChild(item);
-  });
+  if (gauge.needles && gauge.needles.length > 0) {
+    gauge.needles.forEach((n, i) => {
+      const item = document.createElement('div');
+      item.className = 'needle-item';
+      const angleText = n.angle_degrees !== null ? `${n.angle_degrees}°` : 'Interpolated';
+      const typeLabel = n.type ? n.type.replace('_', ' ') : 'pointer';
+      item.innerHTML = `
+        <div class="needle-row">
+          <span class="needle-key">Pointer #${i+1} (${typeLabel}):</span>
+          <span class="needle-val" style="color: ${n.color === 'bronze' ? '#f59e0b' : '#ef4444'}">${(n.color || 'black').toUpperCase()}</span>
+        </div>
+        <div class="needle-row">
+          <span class="needle-key">Deflection Angle:</span>
+          <span class="needle-val">${angleText}</span>
+        </div>
+        <div class="needle-row">
+          <span class="needle-key">Tip Coordinates:</span>
+          <span class="needle-val">(${Math.round(n.tip_point.x)}, ${Math.round(n.tip_point.y)})</span>
+        </div>
+      `;
+      needlesList.appendChild(item);
+    });
+  } else {
+    needlesList.innerHTML = '<span class="text-muted" style="font-size:0.75rem; padding: 0.25rem 0;">No mechanical pointers (Digital / Meniscus display)</span>';
+  }
 
   // Scale Numbers Chips
   const numChips = document.getElementById('numbersChips');
@@ -1596,7 +1627,7 @@ function setupSettingsModal() {
   const openModal = () => {
     if (state.config) {
       let activeP = state.config.provider;
-      if (!activeP || activeP === 'mock') activeP = 'gemini';
+      if (!activeP) activeP = 'gemini';
 
       const radio = document.querySelector(`input[name="aiProvider"][value="${activeP}"]`) || document.querySelector('input[name="aiProvider"]');
       if (radio) {

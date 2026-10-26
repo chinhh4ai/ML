@@ -156,16 +156,41 @@ class LiteLLMGaugePrompt(BaseGaugePrompt):
         return (
             f"Carefully analyze this industrial gauge meter image.{hint}\n"
             f"{domain_rules}\n\n"
+            "REQUIREMENTS:\n"
+            "- Dial/Needle gauges: pointers in `needles`, detected scale numbers in `numbers`, and derivation in `reading.reasoning` are ALL MANDATORY.\n"
+            "- Digital / Roller / Sight glass: pointers not required (`needles: []`), but detected digits/marks in `numbers` and derivation in `reading.reasoning` are MANDATORY.\n\n"
             "Perform precision visual inspection and output strictly valid raw JSON:\n"
             "{\n"
             '  "gauges": [\n'
             "    {\n"
-            '      "gauge_index": 1,\n'
+            '      "gauge_id": "gauge_1",\n'
+            '      "label": "string",\n'
             '      "gauge_type": "string",\n'
-            '      "bbox": [ymin, xmin, ymax, xmax],\n'
-            '      "reading": {"value": float, "unit": "string", "confidence": float},\n'
-            '      "scale": {"min_val": float, "max_val": float, "unit": "string"},\n'
-            '      "needle": {"angle_deg": float, "tip": [y, x], "center": [y, x]}\n'
+            '      "bbox": {"ymin": int, "xmin": int, "ymax": int, "xmax": int},\n'
+            '      "dial_center": {"x": int, "y": int},\n'
+            '      "needles": [\n'
+            "        {\n"
+            '          "needle_id": "needle_1",\n'
+            '          "type": "primary_pointer",\n'
+            '          "bbox": {"ymin": int, "xmin": int, "ymax": int, "xmax": int},\n'
+            '          "pivot_point": {"x": int, "y": int},\n'
+            '          "tip_point": {"x": int, "y": int},\n'
+            '          "angle_degrees": float,\n'
+            '          "color": "black"\n'
+            "        }\n"
+            "      ],\n"
+            '      "numbers": [\n'
+            '        {"value": "string", "numeric_value": float, "bbox": {"ymin": int, "xmin": int, "ymax": int, "xmax": int}, "position": {"x": int, "y": int}}\n'
+            "      ],\n"
+            '      "reading": {\n'
+            '        "value": float,\n'
+            '        "unit": "string",\n'
+            '        "formatted": "string",\n'
+            '        "min_range": float,\n'
+            '        "max_range": float,\n'
+            '        "confidence": float,\n'
+            '        "reasoning": "Detailed derivation of reading from needle angle or displayed digits"\n'
+            "      }\n"
             "    }\n"
             "  ]\n"
             "}"
@@ -223,7 +248,8 @@ class LiteLLMGaugePrompt(BaseGaugePrompt):
             f"{geom_hint}"
             "   - Follow the primary active dark needle from center pivot to perimeter pointing tip.\n"
             "   - CAUTION FOR DUAL-POINTERS / THERMOMETERS: If a stationary bronze or red setpoint marker is present, ignore it! ALWAYS read the active dark pointer.\n"
-            "4. Calculate exact indicated reading value by proportional interpolation between the nearest flanking ticks.\n\n"
+            "4. Calculate exact indicated reading value by proportional interpolation between the nearest flanking ticks.\n"
+            "5. Detect scale numbers visible on the dial face.\n\n"
             "Output strictly valid raw JSON:\n"
             "{\n"
             '  "gauge_type": "pressure_gauge | thermometer | ammeter | voltmeter | power_factor_meter | flowmeter",\n'
@@ -233,7 +259,7 @@ class LiteLLMGaugePrompt(BaseGaugePrompt):
             '  "max_range": float,\n'
             '  "confidence": float (0.0 to 1.0),\n'
             '  "scale_numbers": [float],\n'
-            '  "reasoning": "Clear 1-sentence explanation of needle tip alignment with ticks and reading"\n'
+            '  "reasoning": "Clear explanation of needle tip alignment with ticks and reading derivation"\n'
             "}"
         )
 
@@ -260,7 +286,9 @@ class LiteLLMGaugePrompt(BaseGaugePrompt):
             "1. Bounding box [ymin, xmin, ymax, xmax] in normalized coordinates [0, 1000].\n"
             "2. Gauge type ('flowmeter', 'pressure_gauge', 'thermometer', 'ammeter', 'voltmeter', 'seven_segment', 'sight_glass').\n"
             "3. Exact reading value and unit.\n"
-            "4. has_needle: true ONLY if it has a rotating mechanical pointer needle; false if it is a digital counter, roller drum, or sight glass.\n\n"
+            "4. Dial pointers in `needles`: MANDATORY for dial/pointer meters; empty list `[]` for digital/drum/sight glass.\n"
+            "5. Scale numbers or digits in `numbers`: MANDATORY for ALL devices.\n"
+            "6. Derivation explanation in `reading.reasoning`: MANDATORY for ALL devices.\n\n"
             "Output strictly valid raw JSON:\n"
             "{\n"
             '  "gauge_count": int,\n'
@@ -270,15 +298,19 @@ class LiteLLMGaugePrompt(BaseGaugePrompt):
             '      "gauge_type": "string",\n'
             '      "label": "string",\n'
             '      "bbox": [ymin, xmin, ymax, xmax],\n'
-            '      "has_needle": bool,\n'
+            '      "dial_center": [500, 500],\n'
+            '      "needles": [],\n'
+            '      "numbers": [\n'
+            '        {"value": "string", "numeric_value": float, "bbox": [ymin, xmin, ymax, xmax], "position": [x, y]}\n'
+            '      ],\n'
             '      "reading": {\n'
             '        "value": float,\n'
             '        "unit": "string",\n'
             '        "min_range": float,\n'
             '        "max_range": float,\n'
             '        "confidence": float,\n'
-            '        "reasoning": "string"\n'
-            "      }\n"
+            '        "reasoning": "Step-by-step derivation reasoning"\n'
+            '      }\n'
             "    }\n"
             "  ]\n"
             "}"

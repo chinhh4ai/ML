@@ -1,6 +1,6 @@
 """
 Application configuration for Gauge Detection System
-Supports Gemini, OpenAI, LiteLLM, and Mock providers
+Supports Gemini, OpenAI, and LiteLLM providers
 """
 import os
 from pathlib import Path

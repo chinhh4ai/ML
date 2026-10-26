@@ -65,7 +65,7 @@ class GaugeDetection(BaseModel):
 class DetectionResult(BaseModel):
     """Top-level response for image detection"""
     success: bool = True
-    provider: str = Field("gemini", description="AI provider used: gemini, openai, litellm, mock")
+    provider: str = Field("gemini", description="AI provider used: gemini, openai, litellm")
     model: str = Field("", description="Model name used")
     image_width: int = Field(0, description="Original image width in pixels")
     image_height: int = Field(0, description="Original image height in pixels")

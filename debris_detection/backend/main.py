@@ -31,7 +31,7 @@ async def lifespan(app):
     pipeline.EXECUTOR.shutdown(wait=True)
 
 
-app = FastAPI(title='Riverlens · Aquatic Debris Intelligence', lifespan=lifespan)
+app = FastAPI(title='Debris Detection', lifespan=lifespan)
 
 
 class ConfigUpdateRequest(BaseModel):
@@ -181,6 +181,20 @@ def retry(vid: str):
         result = store.update(vid, status='queued', progress=0, stage='Waiting for worker', error=None)
         pipeline.submit(vid)
     return public(result)
+
+
+@app.delete('/api/videos/{vid}')
+def delete_video(vid: str):
+    row = video_or_404(vid)
+    store.delete(vid)
+    (DATA / 'videos' / f'{vid}.source').unlink(missing_ok=True)
+    (DATA / 'videos' / f'{vid}.mp4').unlink(missing_ok=True)
+    (DATA / 'videos' / f'{vid}.processing.mp4').unlink(missing_ok=True)
+    frames_dir = DATA / 'frames' / vid
+    if frames_dir.exists():
+        shutil.rmtree(frames_dir, ignore_errors=True)
+    return {'status': 'deleted', 'id': vid, 'name': row.get('name', '')}
+
 
 
 ALIASES = {

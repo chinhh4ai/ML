@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GaugeVision AI - Industrial Gauge &amp; Needle Detection</title>
+  <!-- <title>GaugeVision AI - Industrial Gauge &amp; Needle Detection</title> -->
   <meta name="description"
     content="AI Computer Vision system for analog gauge meter detection, needle pointer angle estimation, scale tick recognition, and value prediction.">
   <!-- Google Fonts -->
@@ -29,8 +29,8 @@
         </svg>
       </div>
       <div class="brand-text">
-        <span class="brand-title">GAUGE<span class="accent-text">VISION</span> AI</span>
-        <span class="brand-subtitle">INDUSTRIAL DIAL &amp; NEEDLE DETECTION</span>
+        <span class="brand-title">GAUGE<span class="accent-text"> DETECTION</span> AI</span>
+        <!-- <span class="brand-subtitle">INDUSTRIAL DIAL &amp; NEEDLE DETECTION</span> -->
       </div>
     </div>
 
@@ -50,10 +50,6 @@
         </svg>
         <span>Configure AI</span>
       </button>
-
-      <a href="/docs" target="_blank" class="btn btn-ghost btn-sm" title="FastAPI Swagger Documentation">
-        <span>API Docs</span>
-      </a>
     </div>
   </header>
 
@@ -65,7 +61,6 @@
       <div class="panel-section">
         <div class="section-header">
           <span class="section-title">DEMO SAMPLES</span>
-          <span class="badge badge-accent">4 SAMPLES</span>
         </div>
         <p class="section-desc">Click any sample to test gauge object detection, needle vectors, and reading prediction:
         </p>
@@ -126,8 +121,10 @@
             </svg>
             <span>Prompt Template &amp; Options</span>
           </div>
-          <button class="btn-icon-subtle" id="btnTogglePromptExpand" type="button" title="Expand / Collapse Prompt Editor">
-            <svg id="iconExpandPrompt" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2">
+          <button class="btn-icon-subtle" id="btnTogglePromptExpand" type="button"
+            title="Expand / Collapse Prompt Editor">
+            <svg id="iconExpandPrompt" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none"
+              stroke-width="2">
               <polyline points="15 3 21 3 21 9"></polyline>
               <polyline points="9 21 3 21 3 15"></polyline>
               <line x1="21" y1="3" x2="14" y2="10"></line>
@@ -157,7 +154,8 @@
               <span class="chip-label">Shape:</span> <span class="chip-val" id="metaShapeVal">Diverse</span>
             </span>
             <span class="meta-chip" id="metaIndicatorChip" title="Indicator Type">
-              <span class="chip-label">Indicator:</span> <span class="chip-val" id="metaIndicatorVal">Pointer / Digits</span>
+              <span class="chip-label">Indicator:</span> <span class="chip-val" id="metaIndicatorVal">Pointer /
+                Digits</span>
             </span>
           </div>
         </div>
@@ -174,9 +172,11 @@
               <span>Reset</span>
             </button>
           </div>
-          <textarea id="promptEditorTextarea" class="prompt-textarea" rows="7" spellcheck="false" placeholder="Loading prompt template..."></textarea>
+          <textarea id="promptEditorTextarea" class="prompt-textarea" rows="7" spellcheck="false"
+            placeholder="Loading prompt template..."></textarea>
           <div class="prompt-char-count">
-            <span id="promptCharCount">0</span> chars • <span id="promptStatusBadge" class="status-standard">Standard Template</span>
+            <span id="promptCharCount">0</span> chars • <span id="promptStatusBadge" class="status-standard">Standard
+              Template</span>
           </div>
         </div>
       </div>
@@ -464,7 +464,8 @@
               <input type="radio" name="aiProvider" value="hybrid">
               <div class="radio-box">
                 <span class="provider-title">⚡ Hybrid (YOLO/X + LiteLLM)</span>
-                <span class="provider-desc">Local YOLO/X gauge detection + LiteLLM VLM dial reading (Single &amp; Multi-gauge)</span>
+                <span class="provider-desc">Local YOLO/X gauge detection + LiteLLM VLM dial reading (Single &amp;
+                  Multi-gauge)</span>
               </div>
             </label>
             <label class="provider-radio">
@@ -505,7 +506,8 @@
               <label class="form-label" for="selectGeminiModel">Gemini Vision Model:</label>
               <div class="model-fetch-indicator" id="indicatorGemini">
                 <span class="indicator-text" id="statusGemini">Auto-loaded</span>
-                <button type="button" class="btn-refresh-models" id="btnRefreshGemini" title="Refresh available models from Google AI">
+                <button type="button" class="btn-refresh-models" id="btnRefreshGemini"
+                  title="Refresh available models from Google AI">
                   <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2">
                     <path d="M23 4v6h-6"></path>
                     <path d="M1 20v-6h6"></path>
@@ -525,7 +527,8 @@
               <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
               <option value="__custom__">+ Enter Custom Model Name...</option>
             </select>
-            <input type="text" id="inputGeminiModelCustom" class="form-input mt-2" placeholder="e.g. gemini-flash-lite-latest" style="display: none;">
+            <input type="text" id="inputGeminiModelCustom" class="form-input mt-2"
+              placeholder="e.g. gemini-flash-lite-latest" style="display: none;">
           </div>
         </div>
 
@@ -544,7 +547,8 @@
               <label class="form-label" for="selectOpenaiModel">OpenAI Vision Model:</label>
               <div class="model-fetch-indicator" id="indicatorOpenai">
                 <span class="indicator-text" id="statusOpenai">Auto-loaded</span>
-                <button type="button" class="btn-refresh-models" id="btnRefreshOpenai" title="Refresh available models from OpenAI">
+                <button type="button" class="btn-refresh-models" id="btnRefreshOpenai"
+                  title="Refresh available models from OpenAI">
                   <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2">
                     <path d="M23 4v6h-6"></path>
                     <path d="M1 20v-6h6"></path>
@@ -560,24 +564,30 @@
               <option value="o1-mini">o1-mini</option>
               <option value="__custom__">+ Enter Custom Model Name...</option>
             </select>
-            <input type="text" id="inputOpenaiModelCustom" class="form-input mt-2" placeholder="e.g. gpt-4o" style="display: none;">
+            <input type="text" id="inputOpenaiModelCustom" class="form-input mt-2" placeholder="e.g. gpt-4o"
+              style="display: none;">
           </div>
         </div>
 
         <!-- Hybrid Config Group -->
         <div class="provider-settings-group" id="groupHybrid" style="display: none;">
-          <div class="card p-3 mb-3" style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.3); border-radius: 8px; margin-bottom: 1rem; padding: 0.75rem;">
-            <div style="font-weight: 600; font-size: 0.82rem; color: #38bdf8; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <div class="card p-3 mb-3"
+            style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.3); border-radius: 8px; margin-bottom: 1rem; padding: 0.75rem;">
+            <div
+              style="font-weight: 600; font-size: 0.82rem; color: #38bdf8; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
               <span>⚡ Two-Stage Hybrid Architecture Active</span>
             </div>
             <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
-              <strong>Stage 1 (CV Localization):</strong> Local YOLOv8-World / YOLOX detects all dial casings and pointers with exact sub-pixel geometry.<br>
-              <strong>Stage 2 (VLM Deep Reading):</strong> High-resolution crops of each dial are queried against LiteLLM VLM for zero-error unit and value interpretation.
+              <strong>Stage 1 (CV Localization):</strong> Local YOLOv8-World / YOLOX detects all dial casings and
+              pointers with exact sub-pixel geometry.<br>
+              <strong>Stage 2 (VLM Deep Reading):</strong> High-resolution crops of each dial are queried against
+              LiteLLM VLM for zero-error unit and value interpretation.
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">Local CV Detector Model:</label>
-            <input type="text" class="form-input" value="YOLOv8-World + YOLOX LiteRT (Local CUDA L40)" readonly style="opacity: 0.85; cursor: default;">
+            <input type="text" class="form-input" value="YOLOv8-World + YOLOX LiteRT (Local CUDA L40)" readonly
+              style="opacity: 0.85; cursor: default;">
           </div>
           <div class="form-group">
             <label class="form-label">LiteLLM Base URL:</label>
@@ -602,12 +612,14 @@
               </div>
             </div>
             <select id="selectHybridModel" class="form-input form-select">
-              <option value="Llama-3.1-Nemotron-Nano-VL-8B-V1-FP4-QAD-A30.0.121">Llama-3.1-Nemotron-Nano-VL-8B-V1-FP4-QAD-A30.0.121 (Fast ~600ms)</option>
+              <option value="Llama-3.1-Nemotron-Nano-VL-8B-V1-FP4-QAD-A30.0.121">
+                Llama-3.1-Nemotron-Nano-VL-8B-V1-FP4-QAD-A30.0.121 (Fast ~600ms)</option>
               <option value="Gemma-4-31B-IT-NVFP4-L40.0.127">Gemma-4-31B-IT-NVFP4-L40.0.127</option>
               <option value="Gemma-26B-A4B-It-L40.1.127">Gemma-26B-A4B-It-L40.1.127</option>
               <option value="__custom__">+ Enter Custom Model Name...</option>
             </select>
-            <input type="text" id="inputHybridModelCustom" class="form-input mt-2" placeholder="e.g. Llama-3.1-Nemotron-Nano-VL-8B-V1-FP4-QAD-A30.0.121" style="display: none;">
+            <input type="text" id="inputHybridModelCustom" class="form-input mt-2"
+              placeholder="e.g. Llama-3.1-Nemotron-Nano-VL-8B-V1-FP4-QAD-A30.0.121" style="display: none;">
           </div>
         </div>
 
@@ -626,7 +638,8 @@
               <label class="form-label" for="selectLitellmModel">LiteLLM Vision Model:</label>
               <div class="model-fetch-indicator" id="indicatorLitellm">
                 <span class="indicator-text" id="statusLitellm">Auto-loaded</span>
-                <button type="button" class="btn-refresh-models" id="btnRefreshLitellm" title="Refresh available models from LiteLLM proxy">
+                <button type="button" class="btn-refresh-models" id="btnRefreshLitellm"
+                  title="Refresh available models from LiteLLM proxy">
                   <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2">
                     <path d="M23 4v6h-6"></path>
                     <path d="M1 20v-6h6"></path>
@@ -637,11 +650,13 @@
             </div>
             <select id="selectLitellmModel" class="form-input form-select">
               <option value="Gemma-26B-A4B-It-L40.1.127">Gemma-26B-A4B-It-L40.1.127</option>
-              <option value="Llama-3.1-Nemotron-Nano-VL-8B-V1-FP4-QAD-A30.0.121">Llama-3.1-Nemotron-Nano-VL-8B-V1-FP4-QAD-A30.0.121</option>
+              <option value="Llama-3.1-Nemotron-Nano-VL-8B-V1-FP4-QAD-A30.0.121">
+                Llama-3.1-Nemotron-Nano-VL-8B-V1-FP4-QAD-A30.0.121</option>
               <option value="Gemma-4-31B-IT-NVFP4-L40.0.127">Gemma-4-31B-IT-NVFP4-L40.0.127</option>
               <option value="__custom__">+ Enter Custom Model Name...</option>
             </select>
-            <input type="text" id="inputLitellmModelCustom" class="form-input mt-2" placeholder="e.g. Gemma-26B-A4B-It-L40.1.127" style="display: none;">
+            <input type="text" id="inputLitellmModelCustom" class="form-input mt-2"
+              placeholder="e.g. Gemma-26B-A4B-It-L40.1.127" style="display: none;">
           </div>
         </div>
       </div>

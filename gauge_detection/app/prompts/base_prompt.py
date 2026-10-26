@@ -35,30 +35,38 @@ class BaseGaugePrompt:
 
     def get_detection_tasks(self) -> str:
         return (
-            "DETECTION & REASONING TASKS:\n"
-            "1. Locate each analog gauge meter frame (`bbox`).\n"
-            "2. Determine dial center pivot point (`dial_center` [x, y]).\n"
-            "3. Identify all needles/pointers (`needles`):\n"
-            "   - `needle_id`: e.g. 'needle_1'\n"
-            "   - `type`: 'primary_pointer' or 'secondary_pointer' or 'setpoint'\n"
-            "   - `bbox`: bounding box of needle\n"
-            "   - `pivot_point`: rotation base [x, y]\n"
-            "   - `tip_point`: pointing tip [x, y]\n"
-            "   - `angle_degrees`: rotation angle in degrees (0 to 360 clockwise where 0 is 12 o'clock, or standard polar)\n"
-            "   - `color`: pointer color e.g. 'black', 'red', 'bronze'\n"
-            "4. Recognize visible scale numbers printed on dial (`numbers`):\n"
-            "   - `value`: text string e.g. '0', '10', '20', '100'\n"
-            "   - `numeric_value`: float or null\n"
-            "   - `bbox`: bounding box around number\n"
-            "   - `position`: center [x, y] of number\n"
-            "5. Predict exact pointer reading (`reading`):\n"
-            "   - `value`: predicted reading number that needle points to\n"
-            "   - `unit`: unit of measurement (e.g. '°C', 'V', 'A', 'bar', 'psi', 'MPa', 'rpm')\n"
-            "   - `formatted`: e.g. '20 °C', '0 A', '420 V'\n"
-            "   - `min_range`: dial scale minimum value\n"
-            "   - `max_range`: dial scale maximum value\n"
-            "   - `confidence`: confidence score between 0.0 and 1.0\n"
-            "   - `reasoning`: concise explanation of how the needle tip aligns with neighboring tick marks and numbers."
+            "DETECTION & REASONING RULES BY GAUGE CATEGORY:\n\n"
+            "A. FOR ANALOG / DIAL GAUGES (WITH NEEDLES / POINTERS):\n"
+            "   1. Frame & Dial: Detect `bbox` [ymin, xmin, ymax, xmax] and `dial_center` [x, y].\n"
+            "   2. MANDATORY POINTERS (`needles`):\n"
+            "      - Identify EVERY pointer needle: `needle_id`, `type` ('primary_pointer', 'secondary_pointer', 'setpoint'),\n"
+            "        `pivot_point` [x, y], `tip_point` [x, y], `angle_degrees` (0-360° clockwise from 12 o'clock), `color`.\n"
+            "      - Distinguish active operating pointer (usually black) from stationary limit/setpoint marker (red/bronze).\n"
+            "   3. MANDATORY SCALE NUMBERS (`numbers`):\n"
+            "      - Detect ALL printed numbers along the scale arc.\n"
+            "      - For each number: `value` (e.g. '0', '10', '20', '400'), `numeric_value`, `bbox`, `position`.\n"
+            "   4. MANDATORY AI REASONING & DERIVATION (`reading.reasoning`):\n"
+            "      - Explain how the pointer tip aligns with the dial numbers and tick marks to derive `reading.value`.\n\n"
+            "B. FOR NON-NEEDLE GAUGES (DIGITAL 7-SEGMENT, ROLLER DRUM COUNTERS, SIGHT GLASSES):\n"
+            "   1. `needles`: Set to empty list `[]` (pointers are NOT required for non-needle meters).\n"
+            "   2. MANDATORY DETECTED SCALE NUMBERS (`numbers`):\n"
+            "      - For 7-segment LED / LCD: extract each displayed digit or full number (e.g. '5', '6', '.', '0' or '56.0').\n"
+            "      - For Tokico / mechanical roller drums: extract each visible roller digit wheel and sub-dial numbers.\n"
+            "      - For Dual-Counter Hour Meters (e.g. Mitsubishi HS-72B with 'TOTAL TIME' and 'TIME'):\n"
+            "        * Identify BOTH counter rows: Upper row is non-resettable cumulative 'TOTAL TIME' (e.g. 267.6 h), Lower row is resettable 'TIME' (e.g. 257.9 h) with bottom reset knob.\n"
+            "        * Detect both rows as two distinct gauge entries in `gauges` (or report both in `reading.formatted` as 'TOTAL: 267.6 h | TRIP: 257.9 h') and include all digits of BOTH rows in `numbers`.\n"
+            "      - For oil level sight glass: extract reference marks ('MIN', 'MAX', 0, 50, 100%).\n"
+            "      - For each number: provide `value`, `numeric_value`, `bbox`, `position`.\n"
+            "   3. MANDATORY AI REASONING & DERIVATION (`reading.reasoning`):\n"
+            "      - Explain step-by-step how the value was recognized from the LED segments/decimal points, roller wheels (including both TOTAL and TRIP rows on dual-counter hour meters), or oil meniscus boundary.\n\n"
+            "5. READING PREDICTION (`reading` - REQUIRED FOR ALL GAUGES):\n"
+            "   - `value`: predicted numeric reading.\n"
+            "   - `unit`: unit of measurement ('°C', 'V', 'A', 'bar', 'psi', 'MPa', 'L', 'cos_phi', '%').\n"
+            "   - `formatted`: formatted text (e.g. '20 °C', '420 V', '56.0 V', '130477.9 L', '50.0 %').\n"
+            "   - `min_range`: lowest scale value or 0.0.\n"
+            "   - `max_range`: highest scale value.\n"
+            "   - `confidence`: confidence score between 0.0 and 1.0.\n"
+            "   - `reasoning`: detailed derivation explanation (MANDATORY FOR ALL GAUGES)."
         )
 
     def get_json_example(self) -> str:
@@ -66,7 +74,7 @@ class BaseGaugePrompt:
   "gauges": [
     {
       "gauge_id": "gauge_1",
-      "label": "Analog Gauge Meter",
+      "label": "Dial Thermometer",
       "gauge_type": "thermometer",
       "bbox": {"ymin": 160, "xmin": 250, "ymax": 830, "xmax": 840},
       "dial_center": {"x": 545, "y": 495},
@@ -83,6 +91,12 @@ class BaseGaugePrompt:
       ],
       "numbers": [
         {
+          "value": "0",
+          "numeric_value": 0.0,
+          "bbox": {"ymin": 630, "xmin": 460, "ymax": 690, "xmax": 495},
+          "position": {"x": 477, "y": 660}
+        },
+        {
           "value": "20",
           "numeric_value": 20.0,
           "bbox": {"ymin": 460, "xmin": 405, "ymax": 520, "xmax": 440},
@@ -95,12 +109,12 @@ class BaseGaugePrompt:
         "formatted": "20 °C",
         "min_range": 0.0,
         "max_range": 100.0,
-        "confidence": 0.95,
-        "reasoning": "Primary black pointer points directly at the 20 mark."
+        "confidence": 0.98,
+        "reasoning": "Primary black pointer pivots at (545, 495) and points horizontally (270.0°) directly aligned with the 20 °C scale number mark between 0 and 100 °C."
       }
     }
   ],
-  "explanation": "Detected 1 analog gauge."
+  "explanation": "Detected 1 dial gauge with needle kinematics, scale numbers, and derivation reasoning."
 }"""
 
     def build_system_prompt(self) -> str:
@@ -118,6 +132,8 @@ class BaseGaugePrompt:
         """Construct user prompt accompanying the image."""
         hint = f" Image filename: {filename}." if filename else ""
         return (
-            f"Detect all analog gauge meters, pointer needles, and scale numbers in this image.{hint} "
-            f"Predict the precise reading that each needle points to and output strictly valid JSON."
+            f"Detect all meters, dial needles/pointers, and scale numbers in this image.{hint}\n"
+            f"- For needle/pointer dial gauges: pointers in `needles`, detected scale numbers in `numbers`, and derivation reasoning in `reading.reasoning` are ALL MANDATORY.\n"
+            f"- For other meters (digital, roller drum, sight glass): pointers are not required (`needles: []`), but detected numbers/digits in `numbers` and derivation reasoning in `reading.reasoning` are MANDATORY.\n"
+            f"Output strictly valid raw JSON."
         )

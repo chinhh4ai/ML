@@ -25,6 +25,7 @@ import {
   Settings2,
   ShieldCheck,
   Sparkles,
+  Trash2,
   UploadCloud,
   Video,
   X,
@@ -132,8 +133,8 @@ const time = (n = 0) =>
   `${Math.floor(n / 60)
     .toString()
     .padStart(2, "0")}:${Math.floor(n % 60)
-    .toString()
-    .padStart(2, "0")}`;
+      .toString()
+      .padStart(2, "0")}`;
 const labels: Record<string, string> = {
   Plastic: "Plastic Debris",
   Metal: "Metal / Can Debris",
@@ -181,6 +182,7 @@ function App() {
   const [items, setItems] = useState<Item[]>([]),
     [selected, setSelected] = useState<string | null>(null),
     [detail, setDetail] = useState<Item | null>(null);
+  const itemsRef = useRef<Item[]>([]);
   const [health, setHealth] = useState<Health | null>(null),
     [error, setError] = useState(""),
     [settings, setSettings] = useState(false),
@@ -213,12 +215,33 @@ function App() {
   const [expandedSegmentId, setExpandedSegmentId] = useState<number | null>(null);
   const [savingConfig, setSavingConfig] = useState(false);
   const [saveResult, setSaveResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const input = useRef<HTMLInputElement>(null),
     player = useRef<HTMLVideoElement>(null),
     chatBottom = useRef<HTMLDivElement>(null);
   const activeId = useRef<string | null>(null);
   activeId.current = selected;
+
+  const handleDeleteVideo = async (e: React.MouseEvent, vid: string, videoName: string) => {
+    e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to delete "${videoName}" from Video Library? This action cannot be undone.`)) {
+      return;
+    }
+    setDeletingId(vid);
+    try {
+      await api<any>(`/videos/${vid}`, { method: "DELETE" });
+      setItems((prev) => prev.filter((item) => item.id !== vid));
+      if (selected === vid) {
+        setSelected(null);
+        setDetail(null);
+      }
+    } catch (e) {
+      setError((e as Error).message || "Failed to delete video");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const load = async () => {
     try {
@@ -227,6 +250,7 @@ function App() {
         api<Health>("/health"),
       ]);
       setItems(list);
+      itemsRef.current = list;
       setHealth(h);
     } catch (e) {
       setError((e as Error).message);
@@ -296,9 +320,19 @@ function App() {
 
   useEffect(() => {
     void load();
-    const timer = setInterval(() => void load(), 4000);
+    // Only poll periodically if there are pending videos (queued or processing)
+    const timer = setInterval(() => {
+      if (document.hidden) return;
+      const hasPending = itemsRef.current.some(
+        (i) => i.status === "queued" || i.status === "processing"
+      );
+      if (hasPending) {
+        void load();
+      }
+    }, 4000);
     return () => clearInterval(timer);
   }, []);
+
   useEffect(() => {
     setDetail(null);
     setMessages([]);
@@ -310,20 +344,42 @@ function App() {
     setQuestion("");
     setAsking(false);
     if (!selected) return;
+
     let live = true;
+    let timer: ReturnType<typeof setInterval> | null = null;
+
     const poll = () =>
       api<Item>("/videos/" + selected)
         .then((d) => {
-          if (live) setDetail(d);
+          if (!live) return;
+          setDetail(d);
+          // Stop polling immediately once the video is finished (ready or failed)
+          if (d.status === "ready" || d.status === "failed") {
+            if (timer) {
+              clearInterval(timer);
+              timer = null;
+            }
+          }
         })
         .catch((e) => {
-          if (live) setError(e.message);
+          if (live) {
+            setError(e.message);
+            if (timer) {
+              clearInterval(timer);
+              timer = null;
+            }
+          }
         });
+
     void poll();
-    const timer = setInterval(() => void poll(), 2500);
+    timer = setInterval(() => {
+      if (document.hidden) return;
+      void poll();
+    }, 2500);
+
     return () => {
       live = false;
-      clearInterval(timer);
+      if (timer) clearInterval(timer);
     };
   }, [selected]);
   useEffect(() => {
@@ -378,7 +434,7 @@ function App() {
   const seek = (s: number) => {
     if (player.current) {
       player.current.currentTime = s;
-      void player.current.play().catch(() => {});
+      void player.current.play().catch(() => { });
       setCurrent(s);
     }
   };
@@ -458,10 +514,10 @@ function App() {
   );
   const boxes =
     observation &&
-    Math.abs(observation.time - current) <= 1 / (detail?.sample_fps || 1)
+      Math.abs(observation.time - current) <= 1 / (detail?.sample_fps || 1)
       ? observation.objects.filter(
-          (o) => objectFilter === "all" || o.label === objectFilter,
-        )
+        (o) => objectFilter === "all" || o.label === objectFilter,
+      )
       : [];
   const segments = results ?? detail?.segments ?? [];
   const filtered = items.filter((i) =>
@@ -481,7 +537,7 @@ function App() {
           <span className="brand-mark">
             <ScanLine size={24} />
           </span>
-          riverlens<span className="brand-dot">.</span>
+          DEBRIS DETECTION
         </button>
         <div className="workspace-label">WORKSPACE</div>
         <button
@@ -499,21 +555,6 @@ function App() {
           System Settings
           <ArrowUpRight size={15} />
         </button>
-        <div className="side-note">
-          <div className="side-note-icon">
-            <Cpu size={21} />
-          </div>
-          <strong>Smart & Lightweight</strong>
-          <p>
-            Track aquatic debris on CPU.
-            <br />
-            Connect AI on your terms.
-          </p>
-          <div className="cpu-pill">
-            <span />
-            CPU ONLY
-          </div>
-        </div>
         <div className="side-bottom">
           <button onClick={() => setHelp(true)}>
             <CircleHelp size={17} />
@@ -548,8 +589,6 @@ function App() {
               <i />
               {health ? "System Ready" : "Connecting..."}
             </span>
-            <span className="header-divider" />
-            <span className="version">MVP / 0.1</span>
           </div>
         </header>
         <main>
@@ -564,17 +603,7 @@ function App() {
           {!selected ? (
             <>
               <div className="page-heading">
-                <div>
-                  <div className="eyebrow">
-                    <span /> AQUATIC DEBRIS INTELLIGENCE
-                  </div>
-                  <h1>
-                    Clear insight into every waterway<span>.</span>
-                  </h1>
-                  <p>
-                    Monitor floating debris across rivers, lakes, and waterways. Detect, track, and analyze with AI.
-                  </p>
-                </div>
+                <div></div>
                 <button
                   className="primary"
                   disabled={uploading}
@@ -716,10 +745,17 @@ function App() {
               {filtered.length ? (
                 <section className="video-grid">
                   {filtered.map((item) => (
-                    <button
+                    <div
                       className="video-card"
                       key={item.id}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setSelected(item.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          setSelected(item.id);
+                        }
+                      }}
                     >
                       <div className="card-image">
                         {item.status === "ready" ? (
@@ -749,6 +785,20 @@ function App() {
                                 ? "Queued"
                                 : "Processing"}
                         </span>
+                        <button
+                          type="button"
+                          className="card-delete-btn"
+                          title="Delete video"
+                          aria-label={`Delete ${item.name}`}
+                          disabled={deletingId === item.id}
+                          onClick={(e) => void handleDeleteVideo(e, item.id, item.name)}
+                        >
+                          {deletingId === item.id ? (
+                            <LoaderCircle size={13} className="spin" />
+                          ) : (
+                            <Trash2 size={13} />
+                          )}
+                        </button>
                         <span className="card-play">
                           <Play size={18} fill="currentColor" />
                         </span>
@@ -770,7 +820,7 @@ function App() {
                           </div>
                         )}
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </section>
               ) : (
@@ -837,14 +887,28 @@ function App() {
                     {detail.detection_model || "YOLO11n-seg"} {detail.detection_device === "cloud-vlm" ? "· Cloud VLM" : "· CPU"}
                   </p>
                 </div>
-                <button
-                  className="secondary"
-                  disabled={!["ready", "failed"].includes(detail.status)}
-                  onClick={() => void retry()}
-                >
-                  <RefreshCw size={15} />
-                  Re-analyze
-                </button>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                  <button
+                    className="danger"
+                    disabled={deletingId === detail.id}
+                    onClick={(e) => void handleDeleteVideo(e, detail.id, detail.name)}
+                  >
+                    {deletingId === detail.id ? (
+                      <LoaderCircle size={15} className="spin" />
+                    ) : (
+                      <Trash2 size={15} />
+                    )}
+                    Delete Video
+                  </button>
+                  <button
+                    className="secondary"
+                    disabled={!["ready", "failed"].includes(detail.status)}
+                    onClick={() => void retry()}
+                  >
+                    <RefreshCw size={15} />
+                    Re-analyze
+                  </button>
+                </div>
               </div>
               {!ready && detail.status !== "failed" && (
                 <div className="processing-banner">
@@ -879,7 +943,7 @@ function App() {
               <div className="domain-notice">
                 <ShieldCheck size={15} />
                 <span>
-                  Aquatic Debris Monitoring Mode · Orange masks indicate candidate debris objects; does not confirm surface status or trash nature. COCO pretrained models are not specialized for waterways.
+                  Monitoring Mode · Orange masks indicate candidate debris objects; does not confirm surface status or trash nature.
                 </span>
               </div>
               <div className="analysis-layout">
@@ -1428,7 +1492,7 @@ function App() {
                         {messages.map((m, i) => (
                           <div className={"message " + m.role} key={i}>
                             <span className="message-label">
-                              {m.role === "user" ? "YOU" : "RIVERLENS AI"}
+                              {m.role === "user" ? "YOU" : "AI"}
                             </span>
                             {m.role === "assistant" ? (
                               <MarkdownView content={m.text} className="chat-markdown" />
@@ -1741,7 +1805,7 @@ function App() {
                 </div>
 
                 <p className="modal-note">
-                  AI is only invoked when you enable it. Sampled JPEG frames are sent to your chosen provider. Audio is not processed. Pretrained COCO weights are not specialized for aquatic debris; field validation is recommended.
+                  AI is only invoked when you enable it. Sampled JPEG frames are sent to your chosen provider. Audio is not processed.
                 </p>
               </>
             ) : (
